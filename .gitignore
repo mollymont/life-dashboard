@@ -1,0 +1,4 @@
+firmware/LifeDashboard/secrets.h
+out/
+__pycache__/
+.venv/

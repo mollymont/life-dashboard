@@ -1,0 +1,6 @@
+playwright>=1.48
+pillow>=10.4
+jinja2>=3.1
+pyyaml>=6.0
+icalendar>=6.0
+recurring-ical-events>=3.3

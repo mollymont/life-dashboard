@@ -1,0 +1,61 @@
+name: Render dashboard
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # every 15 min (UTC). GitHub may run it a few minutes late.
+  push:
+    branches: [main]          # re-render immediately when you edit content.yaml or the template
+  workflow_dispatch: {}       # "Run workflow" button for manual runs
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: |
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Render
+        env:
+          LAT: ${{ vars.LAT }}
+          LON: ${{ vars.LON }}
+          TZ_NAME: ${{ vars.TZ_NAME }}
+          UNITS: ${{ vars.UNITS }}
+          ICS_URL: ${{ secrets.ICS_URL }}
+        run: python render/build.py
+
+      # Publish under a secret folder name so the image (your calendar!) isn't at a guessable URL.
+      - name: Stage site
+        env:
+          OUTPUT_TOKEN: ${{ secrets.OUTPUT_TOKEN }}
+        run: |
+          test -n "$OUTPUT_TOKEN" || { echo "Set the OUTPUT_TOKEN secret"; exit 1; }
+          mkdir -p "site/$OUTPUT_TOKEN"
+          cp out/screen.bin out/preview.png "site/$OUTPUT_TOKEN/"
+          touch site/.nojekyll
+          echo "<!doctype html><title>.</title>" > site/index.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - uses: actions/deploy-pages@v4

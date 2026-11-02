@@ -1,0 +1,93 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&display=block" rel="stylesheet">
+<style>
+  /* 800x480, pure black on white. No grays: the screen is 1-bit, and anything
+     mid-tone gets thresholded to black or white by build.py. */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 800px; height: 480px; background: #fff; color: #000; overflow: hidden; }
+  body { font-family: "Inter", "DejaVu Sans", sans-serif; font-weight: 500; }
+
+  .frame { display: grid; grid-template-columns: 300px 1fr; height: 480px; }
+
+  /* ---------- left: date + weather (inverted) ---------- */
+  .left { background: #000; color: #fff; padding: 28px 26px; display: flex; flex-direction: column; }
+  .dow { font-size: 30px; font-weight: 700; }
+  .day { font-size: 130px; font-weight: 800; line-height: 0.95; letter-spacing: -4px; margin-top: 6px; }
+  .month { font-size: 24px; font-weight: 700; margin-top: 4px; }
+  .wx { margin-top: auto; border-top: 3px solid #fff; padding-top: 16px; }
+  .wx-temp { font-size: 64px; font-weight: 800; line-height: 1; }
+  .wx-cond { font-size: 22px; font-weight: 700; margin-top: 6px; }
+  .wx-meta { font-size: 20px; margin-top: 6px; }
+
+  /* ---------- right: agenda + focus ---------- */
+  .right { padding: 24px 28px 18px; display: flex; flex-direction: column; }
+  h2 { font-size: 15px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+       border-bottom: 3px solid #000; padding-bottom: 5px; margin-bottom: 8px; }
+  .events { list-style: none; }
+  .events li { display: flex; gap: 14px; font-size: 22px; padding: 5px 0; }
+  .events .t { width: 104px; flex: none; font-weight: 700; }
+  .events .n { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .empty { font-size: 20px; padding: 4px 0; }
+  .tomorrow { margin-top: 14px; }
+  .tomorrow li { font-size: 19px; padding: 3px 0; }
+
+  .bottom { margin-top: auto; margin-bottom: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  .focus { font-size: 21px; font-weight: 700; line-height: 1.25; }
+  .todos { list-style: none; }
+  .todos li { font-size: 19px; padding: 2px 0 2px 26px; position: relative; }
+  .todos li::before { content: ""; position: absolute; left: 0; top: 6px;
+                      width: 14px; height: 14px; border: 2.5px solid #000; }
+
+  .stamp { position: absolute; right: 12px; bottom: 6px; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="frame">
+  <section class="left">
+    <div class="dow">{{ dow }}</div>
+    <div class="day">{{ day }}</div>
+    <div class="month">{{ month }}</div>
+    {% if weather %}
+    <div class="wx">
+      <div class="wx-temp">{{ weather.temp }}{{ weather.unit }}</div>
+      <div class="wx-cond">{{ weather.cond }}</div>
+      <div class="wx-meta">H {{ weather.hi }}° · L {{ weather.lo }}° · Rain {{ weather.rain }}%</div>
+    </div>
+    {% endif %}
+  </section>
+
+  <section class="right">
+    <h2>Today</h2>
+    {% if today %}
+    <ul class="events">
+      {% for e in today[:5] %}<li><span class="t">{{ e.time }}</span><span class="n">{{ e.title }}</span></li>{% endfor %}
+    </ul>
+    {% if today|length > 5 %}<div class="empty">+{{ today|length - 5 }} more</div>{% endif %}
+    {% else %}
+    <div class="empty">Nothing scheduled.</div>
+    {% endif %}
+
+    {% if tomorrow %}
+    <div class="tomorrow">
+      <h2>Tomorrow</h2>
+      <ul class="events">
+        {% for e in tomorrow[:2] %}<li><span class="t">{{ e.time }}</span><span class="n">{{ e.title }}</span></li>{% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    {% if focus or todos %}
+    <div class="bottom">
+      <div>{% if focus %}<h2>Focus</h2><div class="focus">{{ focus }}</div>{% endif %}</div>
+      <div>{% if todos %}<h2>To do</h2><ul class="todos">{% for t in todos[:4] %}<li>{{ t }}</li>{% endfor %}</ul>{% endif %}</div>
+    </div>
+    {% endif %}
+  </section>
+</div>
+<div class="stamp">Updated {{ updated }}</div>
+</body>
+</html>
