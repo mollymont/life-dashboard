@@ -1,0 +1,71 @@
+# 10K training plan. The dashboard works out today's session from the date.
+# Week 1 starts on `start` (a Monday). To slide the whole plan, change `start` and `race`.
+start: 2026-11-02
+race: 2027-05-15
+race_label: 10K
+
+phases:          # [first week, last week, name]
+  - [1, 6, Rebuild]
+  - [7, 14, Base]
+  - [15, 22, Build]
+  - [23, 26, Sharpen]
+  - [27, 28, Taper]
+
+# What each weekday is. "run" days pull the detail from `weeks` below.
+weekly:
+  mon: {kind: lift, title: "Lower A", detail: "Heavy legs"}
+  tue: {kind: run,  key: tue, title: "Easy run"}
+  wed: {kind: lift, title: "Upper A", detail: "+ optional incline walk"}
+  thu: {kind: run,  key: thu, title: "Quality run"}
+  fri: {kind: lift, title: "Upper B + glutes", detail: "Keep quads light"}
+  sat: {kind: run,  key: sat, title: "Long run"}
+  sun: {kind: rest, title: "Rest", detail: "Walk, stretch, meal prep"}
+
+# Week-by-week runs. Tag deload/taper/race weeks with `tag`.
+weeks:
+  1:  {tue: "15 min", thu: "15 min", sat: "20 min"}
+  2:  {tue: "20 min", thu: "20 min", sat: "25 min"}
+  3:  {tue: "20 min", thu: "20 min + 4 strides", sat: "30 min"}
+  4:  {tag: deload, tue: "15 min", thu: "15 min + 4 strides", sat: "20 min"}
+  5:  {tue: "25 min", thu: "25 min + 4 strides", sat: "30 min"}
+  6:  {tue: "25 min", thu: "25 min + 6 strides", sat: "35 min"}
+  7:  {tue: "30 min", thu: "30 min + 6 strides", sat: "35 min"}
+  8:  {tag: deload, tue: "20 min", thu: "20 min + 4 strides", sat: "25 min"}
+  9:  {tue: "30 min", thu: "30 min + 6 strides", sat: "40 min"}
+  10: {tue: "30 min", thu: "30 min + 6 strides", sat: "45 min"}
+  11: {tue: "35 min", thu: "30 min incl. 6 x 20 s uphill", sat: "45 min"}
+  12: {tag: deload, tue: "25 min", thu: "25 min + 6 strides", sat: "35 min"}
+  13: {tue: "35 min", thu: "30 min incl. 6 x 20 s uphill", sat: "50 min"}
+  14: {tue: "35 min", thu: "WU + 3 x 4 min tempo + CD", sat: "50 min"}
+  15: {tue: "35 min", thu: "WU + 3 x 5 min tempo + CD", sat: "50 min"}
+  16: {tag: deload, tue: "30 min", thu: "30 min + 6 strides", sat: "40 min"}
+  17: {tue: "35 min", thu: "WU + 3 x 6 min tempo + CD", sat: "55 min"}
+  18: {tue: "40 min", thu: "WU + 6 x 2 min @ 10K effort + CD", sat: "60 min"}
+  19: {tue: "40 min", thu: "WU + 2 x 10 min tempo + CD", sat: "60 min"}
+  20: {tag: deload, tue: "30 min", thu: "30 min + 6 strides", sat: "45 min"}
+  21: {tue: "40 min", thu: "WU + 5 x 3 min @ 10K effort + CD", sat: "65 min"}
+  22: {tue: "40 min", thu: "WU + 20 min tempo + CD", sat: "70 min"}
+  23: {tue: "40 min", thu: "WU + 4 x 1 km @ goal pace + CD", sat: "70 min"}
+  24: {tag: deload, tue: "30 min", thu: "30 min + 6 strides", sat: "50 min"}
+  25: {tue: "40 min", thu: "WU + 3 x 2 km @ goal pace + CD", sat: "75 min"}
+  26: {tue: "40 min", thu: "5K time trial", sat: "70 min"}
+  27: {tag: taper, tue: "30 min", thu: "WU + 3 x 1 km @ goal pace + CD", sat: "50 min"}
+  28: {tag: race, tue: "25 min + 4 strides", thu: "20 min easy + 4 strides", sat: "RACE 10K",
+       mon: "Easy upper only, no legs", wed: "Rest", fri: "Rest"}   # per-week overrides for lift days
+
+# Lift-day note by phase (deload weeks override with `deload_lift`).
+lift_notes:
+  Rebuild: "Push progressive overload"
+  Base: "Push progressive overload"
+  Build: "Lower A: 1 fewer set per leg lift"
+  Sharpen: "Maintain: same weights, ~2/3 sets"
+  Taper: "Half volume"
+deload_lift: "Deload: same weights, half the sets"
+
+# Daily eating targets by day type.
+eat:
+  rest: {kcal: 2200, protein: "120-125", carbs: 270, fat: 70}
+  lift: {kcal: 2400, protein: "120-125", carbs: 320, fat: 70}
+  run:  {kcal: 2450, protein: "120-125", carbs: 330, fat: 70}
+  long_early: {kcal: 2500, protein: "120-125", carbs: 350, fat: 70}   # Sat, Nov-Feb
+  long_late:  {kcal: 2750, protein: "120-125", carbs: 395, fat: 75}   # Sat, Mar-May
