@@ -3,74 +3,106 @@
 <head>
   <meta charset="utf-8">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&display=block" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=block" rel="stylesheet">
   <style>
     /* 800x480, pure black on white. No grays: the screen is 1-bit, and anything
-       mid-tone gets thresholded to black or white by build.py. */
+       mid-tone gets thresholded to black or white by build.py. Texture comes
+       from hatch patterns (real black/white stripes), never from opacity. */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { width: 800px; height: 480px; background: #fff; color: #000; overflow: hidden; }
-    body { font-family: "Inter", "DejaVu Sans", sans-serif; font-weight: 500; }
+    body { font-family: "Inter", "DejaVu Sans", sans-serif; font-weight: 500;
+           -webkit-font-smoothing: none; }
 
-    .frame { display: grid; grid-template-columns: 300px minmax(0, 1fr); height: 480px; }
-
-    /* ---------- left: date + weather (inverted) ---------- */
-    .left { background: #000; color: #fff; padding: 28px 26px; display: flex; flex-direction: column; }
-    .dow { font-size: 30px; font-weight: 700; }
-    .day { font-size: 130px; font-weight: 800; line-height: 0.95; letter-spacing: -4px; margin-top: 6px; }
-    .month { font-size: 24px; font-weight: 700; margin-top: 4px; }
-    .steps { margin-top: 22px; }
-    .steps-row { display: flex; justify-content: space-between; align-items: baseline; }
-    .steps-n { font-size: 30px; font-weight: 800; }
-    .steps-g { font-size: 17px; }
-    .bar { height: 14px; border: 2.5px solid #fff; margin-top: 6px; }
-    .bar > div { height: 100%; background: #fff; }
-    .wx { margin-top: auto; border-top: 3px solid #fff; padding-top: 16px; }
-    .wx-temp { font-size: 64px; font-weight: 800; line-height: 1; }
-    .wx-cond { font-size: 22px; font-weight: 700; margin-top: 6px; }
-    .wx-meta { font-size: 20px; margin-top: 6px; }
-
-    /* ---------- right: training, calendar, reminders ---------- */
-    .right { padding: 24px 28px 18px; display: flex; flex-direction: column; min-width: 0; }
-    h2 { font-size: 15px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
-         border-bottom: 3px solid #000; padding-bottom: 5px; margin-bottom: 8px; }
-    .events { list-style: none; }
-    .events li { display: flex; gap: 14px; font-size: 22px; padding: 3px 0; }
-    .events .t { width: 104px; flex: none; font-weight: 700; }
-    .events .n { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .empty { font-size: 20px; padding: 4px 0; }
-    .more { font-size: 17px; padding: 3px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-    .train { border: 3px solid #000; min-height: 236px; display: flex; flex-direction: column; }
-    .train-head { background: #000; color: #fff; display: flex; justify-content: space-between;
-                  font-size: 15px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; padding: 5px 12px; }
-    .train-body { padding: 10px 12px 12px; flex: 1; display: flex; flex-direction: column; }
-    .sess { font-size: 30px; font-weight: 800; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .sess-d { font-size: 19px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .tmrw { font-size: 15px; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .fuel { margin-top: auto; padding-top: 10px; }
-    .kcal-row { display: flex; justify-content: space-between; align-items: baseline; }
-    .kcal-n { font-size: 24px; font-weight: 800; }
-    .kcal-n span { font-size: 18px; font-weight: 500; }
-    .kcal-l { font-size: 15px; }
-    .bigbar { height: 18px; border: 3px solid #000; margin-top: 4px; }
-    .bigbar > div, .minibar > div { height: 100%; background: #000; }
-    .macs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 9px; }
-    .mac { font-size: 15px; white-space: nowrap; }
-    .mac b { font-weight: 800; font-size: 17px; }
-    .minibar { height: 10px; border: 2px solid #000; margin-top: 3px; }
-
-    .bottom { margin-top: 14px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; }
-    .col { min-width: 0; }
-    .ev { font-size: 18px; padding: 3px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .ev b { font-weight: 800; }
-    .rem-n { float: right; letter-spacing: 1px; }
-    .todos { list-style: none; }
-    .todos li { font-size: 18px; padding: 3px 0 3px 25px; position: relative; }
-    .todos li::before { content: ""; position: absolute; left: 0; top: 7px;
-                        width: 14px; height: 14px; border: 2.5px solid #000; }
+    .frame { display: grid; grid-template-columns: 292px minmax(0, 1fr); height: 480px; }
     .ell { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .stamp { position: absolute; right: 12px; bottom: 6px; font-size: 13px; }
+    /* Diagonal hatch = the "empty" half of any progress bar. Survives 1-bit. */
+    .hatch  { background-image: repeating-linear-gradient(45deg, #000 0 1.5px, #fff 1.5px 4.5px); }
+    .hatchw { background-image: repeating-linear-gradient(45deg, #fff 0 1.5px, #000 1.5px 4.5px); }
+    .hatchl { background-image: repeating-linear-gradient(45deg, #000 0 1px, #fff 1px 6px); }
+
+    /* ---------- left rail: date, week, steps, weather (inverted) ---------- */
+    .left { background: #000; color: #fff; padding: 22px 22px 18px; display: flex; flex-direction: column; }
+    .dow { font-size: 19px; font-weight: 800; letter-spacing: 5px; text-transform: uppercase; }
+    .day { font-size: 136px; font-weight: 900; line-height: 0.82; letter-spacing: -7px; margin: 10px 0 0 -8px; }
+    .month { font-size: 20px; font-weight: 700; letter-spacing: 1px; margin-top: 10px; }
+
+    .week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-top: 16px; }
+    .week div { font-size: 13px; font-weight: 800; text-align: center; padding: 4px 0;
+                border: 2px solid #fff; letter-spacing: 0; }
+    .week .on { background: #fff; color: #000; }
+
+    .steps { margin-top: 18px; }
+    .steps-row { display: flex; justify-content: space-between; align-items: baseline; }
+    .steps-n { font-size: 29px; font-weight: 900; letter-spacing: -1px; }
+    .steps-g { font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+    .bar { height: 15px; border: 2.5px solid #fff; margin-top: 6px; }
+    .bar > div { height: 100%; background: #fff; }
+
+    .wx { margin-top: auto; border-top: 3px solid #fff; padding-top: 14px; }
+    .wx-top { display: flex; align-items: center; gap: 14px; }
+    .wx-top svg { flex: none; width: 58px; height: 58px; stroke: #fff; fill: none;
+                  stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
+    .wx-temp { font-size: 62px; font-weight: 900; line-height: 0.9; letter-spacing: -3px; }
+    .wx-cond { font-size: 21px; font-weight: 700; margin-top: 8px; }
+    .wx-meta { font-size: 17px; font-weight: 500; margin-top: 3px; letter-spacing: 0.3px; }
+
+    /* ---------- right: training, timeline, lists, focus ---------- */
+    .right { padding: 18px 22px 16px; display: flex; flex-direction: column; min-width: 0; }
+    h2 { font-size: 13px; font-weight: 900; letter-spacing: 2.5px; text-transform: uppercase;
+         border-bottom: 3px solid #000; padding-bottom: 4px; margin-bottom: 6px; }
+
+    .train { border: 3px solid #000; display: flex; flex-direction: column; }
+    .train-head { background: #000; color: #fff; display: flex; justify-content: space-between;
+                  font-size: 13px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase;
+                  padding: 5px 11px; }
+    .train-body { padding: 9px 11px 10px; flex: 1; display: flex; flex-direction: column; }
+    .sess { font-size: 31px; font-weight: 900; line-height: 1.02; letter-spacing: -0.8px; }
+    .sess-d { font-size: 18px; font-weight: 500; margin-top: 2px; }
+    .tmrw { font-size: 14px; font-weight: 500; margin-top: 3px; }
+    .tmrw b { font-weight: 800; letter-spacing: 1px; text-transform: uppercase; font-size: 12px; }
+
+    .fuel { margin-top: 9px; padding-top: 9px; border-top: 2px solid #000; }
+    .kcal-row { display: flex; justify-content: space-between; align-items: baseline; }
+    .kcal-n { font-size: 23px; font-weight: 900; letter-spacing: -0.5px; }
+    .kcal-n span { font-size: 15px; font-weight: 500; letter-spacing: 0; }
+    .kcal-l { font-size: 12px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; }
+    .bigbar { height: 15px; border: 2.5px solid #000; margin-top: 3px; }
+    .bigbar > div, .minibar > div { height: 100%; background: #000; }
+    .macs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 7px; }
+    .mac { font-size: 12px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; }
+    .mac b { font-weight: 900; font-size: 15px; letter-spacing: 0; text-transform: none; }
+    .minibar { height: 8px; border: 2px solid #000; margin-top: 3px; }
+
+    /* day timeline: busy blocks across the waking hours, with a now caret */
+    .tlwrap { margin-top: 12px; }
+    .tl { position: relative; height: 20px; border: 2.5px solid #000; }
+    .tl .blk { position: absolute; top: 0; bottom: 0; background: #000; }
+    .tl .tick { position: absolute; top: 0; bottom: 0; width: 2px; background: #000; }
+    .tl .now { position: absolute; top: -7px; width: 0; height: 0; margin-left: -5px;
+               border-left: 5px solid transparent; border-right: 5px solid transparent;
+               border-top: 7px solid #000; }
+    .tlx { position: relative; height: 13px; margin-top: 2px; }
+    .tlx span { position: absolute; font-size: 11px; font-weight: 800; letter-spacing: 0.5px;
+                transform: translateX(-50%); }
+
+    .bottom { margin-top: 12px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+              gap: 20px; }
+    .col { min-width: 0; }
+    .ev { font-size: 17px; padding: 2.5px 0; display: flex; gap: 8px; }
+    .ev b { font-weight: 900; flex: none; font-variant-numeric: tabular-nums; }
+    .rem-n { float: right; letter-spacing: 1px; }
+    .todos { list-style: none; }
+    .todos li { font-size: 17px; padding: 2.5px 0 2.5px 23px; position: relative; }
+    .todos li::before { content: ""; position: absolute; left: 0; top: 6px;
+                        width: 13px; height: 13px; border: 2.5px solid #000; }
+
+    .focus { margin-top: auto; background: #000; color: #fff; display: flex; align-items: center;
+             gap: 12px; padding: 7px 12px; }
+    .focus .lbl { flex: none; font-size: 11px; font-weight: 900; letter-spacing: 2px;
+                  text-transform: uppercase; border: 2px solid #fff; padding: 2px 6px; }
+    .focus .txt { font-size: 17px; font-weight: 700; min-width: 0; }
+    .focus .at { flex: none; margin-left: auto; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
   </style>
 </head>
 <body>
@@ -79,16 +111,30 @@
     <div class="dow">{{ dow }}</div>
     <div class="day">{{ day }}</div>
     <div class="month">{{ month }}</div>
+
+    <div class="week">
+      {% for d in ["M", "T", "W", "T", "F", "S", "S"] %}
+      <div class="{{ 'on' if loop.index0 == now.weekday() }}">{{ d }}</div>
+      {% endfor %}
+    </div>
+
     {% if steps %}
     <div class="steps">
-      <div class="steps-row"><span class="steps-n">{{ steps.count }}</span><span class="steps-g">/ {{ steps.goal }} steps</span></div>
-      <div class="bar"><div style="width: {{ steps.pct }}%"></div></div>
+      <div class="steps-row">
+        <span class="steps-n">{{ steps.count }}</span>
+        <span class="steps-g">/ {{ steps.goal }} steps</span>
+      </div>
+      <div class="bar hatchw"><div style="width: {{ steps.pct }}%"></div></div>
     </div>
     {% endif %}
+
     {% if weather %}
     <div class="wx">
-      <div class="wx-temp">{{ weather.temp }}{{ weather.unit }}</div>
-      <div class="wx-cond">{{ weather.cond }}</div>
+      <div class="wx-top">
+        {% if weather.icon %}<svg viewBox="-3 -3 54 54">{{ weather.icon|safe }}</svg>{% endif %}
+        <div class="wx-temp">{{ weather.temp }}{{ weather.unit }}</div>
+      </div>
+      <div class="wx-cond ell">{{ weather.cond }}</div>
       <div class="wx-meta">H {{ weather.hi }}° · L {{ weather.lo }}° · Rain {{ weather.rain }}%</div>
     </div>
     {% endif %}
@@ -107,24 +153,28 @@
         <span>{% if t.days_to_race > 0 %}{{ t.days_to_race }} days to {{ t.race_label }}{% else %}Race day!{% endif %}</span>
       </div>
       <div class="train-body">
-        <div class="sess">{{ t.today.title }}</div>
-        {% if t.today.detail %}<div class="sess-d">{{ t.today.detail }}</div>{% endif %}
-        {% if t.tomorrow %}<div class="tmrw">Tomorrow: {{ t.tomorrow.title }}{% if t.tomorrow.kind == "run" %} · {{ t.tomorrow.detail }}{% endif %}</div>{% endif %}
+        <div class="sess ell">{{ t.today.title }}</div>
+        {% if t.today.detail %}<div class="sess-d ell">{{ t.today.detail }}</div>{% endif %}
+        {% if t.tomorrow %}<div class="tmrw ell"><b>Tomorrow</b> {{ t.tomorrow.title }}{% if t.tomorrow.kind == "run" %} · {{ t.tomorrow.detail }}{% endif %}</div>{% endif %}
         <div class="fuel">
           {% if macros %}{% set k = macros[0] %}
           <div class="kcal-row">
             <span class="kcal-n">{{ k.val }} <span>/ {{ k.goal }} kcal</span></span>
             <span class="kcal-l">{{ k.left }}</span>
           </div>
-          <div class="bigbar"><div style="width: {{ k.pct }}%"></div></div>
+          <div class="bigbar hatch"><div style="width: {{ k.pct }}%"></div></div>
           <div class="macs">
             {% for m in macros[1:] %}
-            <div class="mac">{{ m.name[0] }} <b>{{ m.val }}</b> / {{ m.goal }}g<div class="minibar"><div style="width: {{ m.pct }}%"></div></div></div>
+            <div class="mac">{{ m.name[0] }} <b>{{ m.val }}</b>/{{ m.goal }}{{ m.unit }}
+              <div class="minibar hatch"><div style="width: {{ m.pct }}%"></div></div>
+            </div>
             {% endfor %}
           </div>
           {% else %}
-          <div class="kcal-row"><span class="kcal-n">{{ "{:,}".format(t.eat.kcal) }} <span>kcal target</span></span></div>
-          <div class="tmrw">P {{ t.eat.protein }}g · C {{ t.eat.carbs }}g · F {{ t.eat.fat }}g</div>
+          <div class="kcal-row">
+            <span class="kcal-n">{{ "{:,}".format(t.eat.kcal) }} <span>kcal target</span></span>
+            <span class="kcal-l">P {{ t.eat.protein }} · C {{ t.eat.carbs }} · F {{ t.eat.fat }}</span>
+          </div>
           {% endif %}
         </div>
       </div>
@@ -132,28 +182,58 @@
     </div>
     {% endif %}
 
+    {# ---- day timeline. T0/T1 are the hours the strip spans. ---- #}
+    {% set T0, T1 = 6, 22 %}
+    {% set span = T1 - T0 %}
+    {% set timed = today | rejectattr("all_day") | selectattr("h1", ">", T0) | selectattr("h0", "<", T1) | list %}
+    <div class="tlwrap">
+      <div class="tl hatchl">
+        {% for e in timed %}
+        {% set a = max(e.h0, T0) %}{% set b = min(e.h1, T1) %}
+        <div class="blk" style="left: {{ (100 * (a - T0) / span) | round(2) }}%;
+                                width: {{ (100 * (b - a) / span) | round(2) }}%"></div>
+        {% endfor %}
+        {% for h in range(T0 + 2, T1, 2) %}
+        <div class="tick" style="left: {{ (100 * (h - T0) / span) | round(2) }}%"></div>
+        {% endfor %}
+        {% set hnow = now.hour + now.minute / 60 %}
+        {% if T0 <= hnow <= T1 %}
+        <div class="now" style="left: {{ (100 * (hnow - T0) / span) | round(2) }}%"></div>
+        {% endif %}
+      </div>
+      <div class="tlx">
+        {% for h in range(T0, T1 + 1, 4) %}
+        <span style="left: {{ (100 * (h - T0) / span) | round(2) }}%">{{ (h - 1) % 12 + 1 }}{{ "a" if h < 12 else "p" }}</span>
+        {% endfor %}
+      </div>
+    </div>
+
     <div class="bottom">
       <div class="col">
-        <h2>Today</h2>
+        <h2>Today{% if today|length > 4 %} <span class="rem-n">+{{ today|length - 4 }}</span>{% endif %}</h2>
         {% if today %}
-        {% for e in today[:4] %}<div class="ev"><b>{{ e.short or "All day" }}</b> {{ e.title }}</div>{% endfor %}
-        {% if today|length > 4 %}<div class="ev">+{{ today|length - 4 }} more</div>{% endif %}
+        {% for e in today[:4] %}<div class="ev"><b>{{ e.short or "all-day" }}</b> <span class="ell">{{ e.title }}</span></div>{% endfor %}
         {% else %}
-        <div class="ev">No events</div>
-        {% if tomorrow %}<div class="ev"><b>Tmrw {{ tomorrow[0].short or "" }}</b> {{ tomorrow[0].title }}</div>{% endif %}
+        <div class="ev">Nothing scheduled.</div>
+        {% if tomorrow %}<div class="ev"><b>tmrw</b> <span class="ell">{{ tomorrow[0].title }}</span></div>{% endif %}
         {% endif %}
       </div>
       <div class="col">
-        <h2>Reminders{% if reminders|length > 5 %} <span class="rem-n">+{{ reminders|length - 5 }}</span>{% endif %}</h2>
-        {% if reminders %}
-        <ul class="todos">{% for r in reminders[:5] %}<li class="ell">{{ r }}</li>{% endfor %}</ul>
+        <h2>To do{% if todos|length > 5 %} <span class="rem-n">+{{ todos|length - 5 }}</span>{% endif %}</h2>
+        {% if todos %}
+        <ul class="todos">{% for r in todos[:5] %}<li class="ell">{{ r }}</li>{% endfor %}</ul>
         {% else %}
         <div class="ev">All clear.</div>
         {% endif %}
       </div>
     </div>
+
+    <div class="focus">
+      <span class="lbl">Focus</span>
+      <span class="txt ell">{{ focus or "—" }}</span>
+      <span class="at">{{ updated }}</span>
+    </div>
   </section>
 </div>
-<div class="stamp">Updated {{ updated }}</div>
 </body>
 </html>

@@ -43,6 +43,25 @@ WMO = {  # Open-Meteo weather codes -> short text
 }
 
 
+# Inline SVG glyphs (stroke-only so they survive the 1-bit threshold at any size).
+ICONS = {
+    "sun": '<circle cx="24" cy="24" r="8.5"/><path d="M24 3v6M24 39v6M3 24h6M39 24h6M9.2 9.2l4.3 4.3M34.5 34.5l4.3 4.3M38.8 9.2l-4.3 4.3M13.5 34.5l-4.3 4.3"/>',
+    "part": '<circle cx="17" cy="16" r="6.5"/><path d="M17 2v4M17 26v1M3 16h4M27 16h4M7.5 6.5l2.8 2.8M24 8.5l2.5-2.5"/><path d="M19 43h17a7.5 7.5 0 0 0 .5-15A10.5 10.5 0 0 0 17.5 30 6.5 6.5 0 0 0 19 43z"/>',
+    "cloud": '<path d="M15 40h21a8.5 8.5 0 0 0 .6-17A11.5 11.5 0 0 0 14 25a7.5 7.5 0 0 0 1 15z"/>',
+    "rain": '<path d="M15 34h21a8.5 8.5 0 0 0 .6-17A11.5 11.5 0 0 0 14 19a7.5 7.5 0 0 0 1 15z"/><path d="M17 39l-3 7M26 39l-3 7M35 39l-3 7"/>',
+    "snow": '<path d="M15 34h21a8.5 8.5 0 0 0 .6-17A11.5 11.5 0 0 0 14 19a7.5 7.5 0 0 0 1 15z"/><path d="M15 43h6M18 40v6M30 43h6M33 40v6"/>',
+    "fog": '<path d="M6 14h36M6 24h36M10 34h32M6 44h30"/>',
+    "storm": '<path d="M15 32h21a8.5 8.5 0 0 0 .6-17A11.5 11.5 0 0 0 14 17a7.5 7.5 0 0 0 1 15z"/><path d="M26 36l-9 0 7 10"/>',
+}
+
+
+def wx_icon(code):
+    g = ("sun" if code == 0 else "part" if code in (1, 2) else "cloud" if code == 3
+         else "fog" if code in (45, 48) else "storm" if code >= 95
+         else "snow" if code in (71, 73, 75, 77, 85, 86) else "rain")
+    return ICONS[g]
+
+
 def http_get(url: str) -> bytes:
     req = urllib.request.Request(url, headers={"User-Agent": "life-dashboard/1.0"})
     with urllib.request.urlopen(req, timeout=20) as r:
@@ -70,6 +89,7 @@ def get_weather():
         "lo": round(d["daily"]["temperature_2m_min"][0]),
         "rain": d["daily"]["precipitation_probability_max"][0],
         "unit": "°F" if UNITS == "fahrenheit" else "°C",
+        "icon": wx_icon(d["current"]["weather_code"]),
     }
 
 
@@ -229,16 +249,17 @@ def get_content():
     return yaml.safe_load(p.read_text()) if p.exists() else {}
 
 
-def mock_data():
+def mock_data(now):
+    def ev(title, h, m, mins):
+        start = now.replace(hour=h, minute=m, second=0, microsecond=0)
+        return _event(title, start, start + dt.timedelta(minutes=mins), False)
+
     return (
-        {"temp": 72, "cond": "Partly cloudy", "hi": 78, "lo": 61, "rain": 20, "unit": "°F"},
-        [
-            {"title": "Morning run", "time": "7:00 AM"},
-            {"title": "Team standup", "time": "9:30 AM"},
-            {"title": "Lunch with Sam", "time": "12:00 PM"},
-            {"title": "Dentist", "time": "4:15 PM"},
-        ],
-        [{"title": "Grocery pickup", "time": "10:00 AM"}],
+        {"temp": 72, "cond": "Partly cloudy", "hi": 78, "lo": 61, "rain": 20,
+         "unit": "°F", "icon": ICONS["part"]},
+        [ev("Morning run", 7, 0, 45), ev("Team standup", 9, 30, 30),
+         ev("Lunch with Sam", 12, 0, 60), ev("Dentist", 16, 15, 45)],
+        [ev("Grocery pickup", 10, 0, 30)],
     )
 
 
@@ -248,6 +269,7 @@ def render_html(ctx) -> str:
     env = Environment(
         loader=FileSystemLoader(ROOT), autoescape=select_autoescape(["html"])
     )
+    env.globals.update(min=min, max=max)
     return env.get_template("dashboard.html").render(**ctx)
 
 
@@ -278,12 +300,16 @@ def main():
 
     now = dt.datetime.now(TZ)
     content = get_content()
+    training = get_training(now)
+    eat = (training or {}).get("eat")
     if args.mock:
-        weather, today, tomorrow = mock_data()
+        weather, today, tomorrow = mock_data(now)
         steps = {"count": "6,482", "goal": "10,000", "pct": 65}
+        macros = _macro_rows(1840, 96, 210, 54, eat)
     else:
         weather, (today, tomorrow, *_) = get_weather(), get_events(now)
         steps = get_steps(now)
+        macros = get_macros(now, eat)
 
     ctx = {
         "now": now,
@@ -293,7 +319,8 @@ def main():
         "updated": now.strftime("%-I:%M %p"),
         "weather": weather,
         "steps": steps,
-        "training": get_training(now),
+        "training": training,
+        "macros": macros,
         "today": today,
         "tomorrow": tomorrow,
         "focus": content.get("focus", ""),
