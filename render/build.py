@@ -269,7 +269,6 @@ def render_html(ctx) -> str:
     env = Environment(
         loader=FileSystemLoader(ROOT), autoescape=select_autoescape(["html"])
     )
-    env.globals.update(min=min, max=max)
     return env.get_template("dashboard.html").render(**ctx)
 
 

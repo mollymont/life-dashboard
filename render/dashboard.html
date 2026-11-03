@@ -62,29 +62,20 @@
     .tmrw { font-size: 14px; font-weight: 500; margin-top: 3px; }
     .tmrw b { font-weight: 800; letter-spacing: 1px; text-transform: uppercase; font-size: 12px; }
 
-    .fuel { margin-top: 9px; padding-top: 9px; border-top: 2px solid #000; }
-    .kcal-row { display: flex; justify-content: space-between; align-items: baseline; }
-    .kcal-n { font-size: 23px; font-weight: 900; letter-spacing: -0.5px; }
-    .kcal-n span { font-size: 15px; font-weight: 500; letter-spacing: 0; }
-    .kcal-l { font-size: 12px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; }
-    .bigbar { height: 15px; border: 2.5px solid #000; margin-top: 3px; }
+    .fuel { margin-top: 12px; border: 3px solid #000; padding: 8px 11px 10px; }
+    .kcal-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+    .kcal-l { flex: none; font-size: 13px; font-weight: 900; letter-spacing: 2.5px;
+              text-transform: uppercase; }
+    .kcal-n { font-size: 27px; font-weight: 900; letter-spacing: -0.8px; }
+    .kcal-n span { font-size: 16px; font-weight: 500; letter-spacing: 0; }
+    .kcal-r { flex: none; font-size: 12px; font-weight: 800; letter-spacing: 1.2px;
+              text-transform: uppercase; }
+    .bigbar { height: 20px; border: 3px solid #000; margin-top: 5px; }
     .bigbar > div, .minibar > div { height: 100%; background: #000; }
-    .macs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 7px; }
+    .macs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 8px; }
     .mac { font-size: 12px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; }
     .mac b { font-weight: 900; font-size: 15px; letter-spacing: 0; text-transform: none; }
-    .minibar { height: 8px; border: 2px solid #000; margin-top: 3px; }
-
-    /* day timeline: busy blocks across the waking hours, with a now caret */
-    .tlwrap { margin-top: 12px; }
-    .tl { position: relative; height: 20px; border: 2.5px solid #000; }
-    .tl .blk { position: absolute; top: 0; bottom: 0; background: #000; }
-    .tl .tick { position: absolute; top: 0; bottom: 0; width: 2px; background: #000; }
-    .tl .now { position: absolute; top: -7px; width: 0; height: 0; margin-left: -5px;
-               border-left: 5px solid transparent; border-right: 5px solid transparent;
-               border-top: 7px solid #000; }
-    .tlx { position: relative; height: 13px; margin-top: 2px; }
-    .tlx span { position: absolute; font-size: 11px; font-weight: 800; letter-spacing: 0.5px;
-                transform: translateX(-50%); }
+    .minibar { height: 9px; border: 2px solid #000; margin-top: 3px; }
 
     .bottom { margin-top: 12px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
               gap: 20px; }
@@ -156,57 +147,36 @@
         <div class="sess ell">{{ t.today.title }}</div>
         {% if t.today.detail %}<div class="sess-d ell">{{ t.today.detail }}</div>{% endif %}
         {% if t.tomorrow %}<div class="tmrw ell"><b>Tomorrow</b> {{ t.tomorrow.title }}{% if t.tomorrow.kind == "run" %} · {{ t.tomorrow.detail }}{% endif %}</div>{% endif %}
-        <div class="fuel">
-          {% if macros %}{% set k = macros[0] %}
-          <div class="kcal-row">
-            <span class="kcal-n">{{ k.val }} <span>/ {{ k.goal }} kcal</span></span>
-            <span class="kcal-l">{{ k.left }}</span>
-          </div>
-          <div class="bigbar hatch"><div style="width: {{ k.pct }}%"></div></div>
-          <div class="macs">
-            {% for m in macros[1:] %}
-            <div class="mac">{{ m.name[0] }} <b>{{ m.val }}</b>/{{ m.goal }}{{ m.unit }}
-              <div class="minibar hatch"><div style="width: {{ m.pct }}%"></div></div>
-            </div>
-            {% endfor %}
-          </div>
-          {% else %}
-          <div class="kcal-row">
-            <span class="kcal-n">{{ "{:,}".format(t.eat.kcal) }} <span>kcal target</span></span>
-            <span class="kcal-l">P {{ t.eat.protein }} · C {{ t.eat.carbs }} · F {{ t.eat.fat }}</span>
-          </div>
-          {% endif %}
-        </div>
       </div>
       {% endif %}
     </div>
     {% endif %}
 
-    {# ---- day timeline. T0/T1 are the hours the strip spans. ---- #}
-    {% set T0, T1 = 6, 22 %}
-    {% set span = T1 - T0 %}
-    {% set timed = today | rejectattr("all_day") | selectattr("h1", ">", T0) | selectattr("h0", "<", T1) | list %}
-    <div class="tlwrap">
-      <div class="tl hatchl">
-        {% for e in timed %}
-        {% set a = max(e.h0, T0) %}{% set b = min(e.h1, T1) %}
-        <div class="blk" style="left: {{ (100 * (a - T0) / span) | round(2) }}%;
-                                width: {{ (100 * (b - a) / span) | round(2) }}%"></div>
-        {% endfor %}
-        {% for h in range(T0 + 2, T1, 2) %}
-        <div class="tick" style="left: {{ (100 * (h - T0) / span) | round(2) }}%"></div>
-        {% endfor %}
-        {% set hnow = now.hour + now.minute / 60 %}
-        {% if T0 <= hnow <= T1 %}
-        <div class="now" style="left: {{ (100 * (hnow - T0) / span) | round(2) }}%"></div>
-        {% endif %}
+    {% if macros %}{% set k = macros[0] %}
+    <div class="fuel">
+      <div class="kcal-row">
+        <span class="kcal-l">Fuel</span>
+        <span class="kcal-n">{{ k.val }} <span>/ {{ k.goal }} kcal</span></span>
+        <span class="kcal-r">{{ k.left }}</span>
       </div>
-      <div class="tlx">
-        {% for h in range(T0, T1 + 1, 4) %}
-        <span style="left: {{ (100 * (h - T0) / span) | round(2) }}%">{{ (h - 1) % 12 + 1 }}{{ "a" if h < 12 else "p" }}</span>
+      <div class="bigbar hatch"><div style="width: {{ k.pct }}%"></div></div>
+      <div class="macs">
+        {% for m in macros[1:] %}
+        <div class="mac">{{ m.name[0] }} <b>{{ m.val }}</b>/{{ m.goal }}{{ m.unit }}
+          <div class="minibar hatch"><div style="width: {{ m.pct }}%"></div></div>
+        </div>
         {% endfor %}
       </div>
     </div>
+    {% elif t and t.eat %}
+    <div class="fuel">
+      <div class="kcal-row">
+        <span class="kcal-l">Fuel</span>
+        <span class="kcal-n">{{ "{:,}".format(t.eat.kcal) }} <span>kcal target</span></span>
+        <span class="kcal-r">P {{ t.eat.protein }} · C {{ t.eat.carbs }} · F {{ t.eat.fat }}</span>
+      </div>
+    </div>
+    {% endif %}
 
     <div class="bottom">
       <div class="col">
