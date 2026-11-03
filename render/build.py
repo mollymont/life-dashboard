@@ -244,6 +244,16 @@ def get_training(now):
     }
 
 
+def get_todos(content):
+    """REMINDERS var is one reminder per line, pushed by the iPhone Shortcut.
+    Falls back to the todos in content.yaml when it is not set."""
+    raw = (os.getenv("REMINDERS") or "").strip()
+    if not raw:
+        return content.get("todos") or []
+    lines = raw.replace(";", "\n").replace("|", "\n").splitlines()
+    return [s for s in (ln.strip(" -\u2022\t") for ln in lines) if s]
+
+
 def get_content():
     p = REPO / "content.yaml"
     return yaml.safe_load(p.read_text()) if p.exists() else {}
@@ -323,7 +333,7 @@ def main():
         "today": today,
         "tomorrow": tomorrow,
         "focus": content.get("focus", ""),
-        "todos": content.get("todos", []) or [],
+        "todos": get_todos(content),
     }
 
     OUT.mkdir(exist_ok=True)
