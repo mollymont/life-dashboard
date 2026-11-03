@@ -42,6 +42,7 @@ jobs:
           UNITS: ${{ vars.UNITS }}
           STEPS: ${{ vars.STEPS }}
           STEPS_GOAL: ${{ vars.STEPS_GOAL }}
+          MACROS: ${{ vars.MACROS }}
           ICS_URL: ${{ secrets.ICS_URL }}
         run: python render/build.py
 
