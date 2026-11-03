@@ -1,6 +1,12 @@
 # Edit this file (even from the GitHub mobile app) and the screen updates on the next run.
+# The REMINDERS repo variable, if set, replaces the todos below.
+#
+# Prefix a to-do with weekdays to show it only on those days:
+#   Thu: Change my trays          -> Thursdays only
+#   Mon/Wed/Fri: Gym              -> three days a week
+#   Water plants                  -> every day
 focus: "Ship one small thing today."
 todos:
   - Water plants
-  - Book dentist
+  - "Thu: Change my trays"
   - Call Mom

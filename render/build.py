@@ -244,14 +244,35 @@ def get_training(now):
     }
 
 
-def get_todos(content):
+def _as_text(item):
+    """`- Thu: Change my trays` is valid YAML for a dict, so accept that shape too
+    (quoting it is easy to forget when editing from a phone)."""
+    if isinstance(item, dict):
+        return "; ".join(f"{k}: {v}" for k, v in item.items())
+    return str(item)
+
+
+def _for_today(item, dkey):
+    """"Thu: Change my trays" shows on Thursdays only; "Mon,Wed: Gym" on either.
+    Anything without a day tag shows every day. Returns the text, or None."""
+    head, sep, rest = item.partition(":")
+    tags = [t.strip().lower()[:3] for t in head.replace("/", ",").split(",")]
+    if sep and tags and all(t in DAYS for t in tags):
+        return rest.strip() if dkey in tags else None
+    return item
+
+
+def get_todos(content, now):
     """REMINDERS var is one reminder per line, pushed by the iPhone Shortcut.
     Falls back to the todos in content.yaml when it is not set."""
     raw = (os.getenv("REMINDERS") or "").strip()
-    if not raw:
-        return content.get("todos") or []
-    lines = raw.replace(";", "\n").replace("|", "\n").splitlines()
-    return [s for s in (ln.strip(" -\u2022\t") for ln in lines) if s]
+    if raw:
+        lines = raw.replace(";", "\n").replace("|", "\n").splitlines()
+        items = [s for s in (ln.strip(" -\u2022\t") for ln in lines) if s]
+    else:
+        items = content.get("todos") or []
+    dkey = DAYS[now.weekday()]
+    return [t for t in (_for_today(_as_text(i), dkey) for i in items) if t]
 
 
 def get_content():
@@ -333,7 +354,7 @@ def main():
         "today": today,
         "tomorrow": tomorrow,
         "focus": content.get("focus", ""),
-        "todos": get_todos(content),
+        "todos": get_todos(content, now),
     }
 
     OUT.mkdir(exist_ok=True)
