@@ -80,35 +80,148 @@ def _to_local(v, is_end=False):
     return dt.datetime.combine(v, dt.time(), TZ), True
 
 
-def get_events(now):
+def _event(title, start, end, all_day):
+    return {
+        "title": title,
+        "time": "All day" if all_day else start.strftime("%-I:%M %p"),
+        "short": "" if all_day else start.strftime("%-I:%M").replace(":00", "") + start.strftime("%p")[0].lower(),
+        "all_day": all_day,
+        "h0": start.hour + start.minute / 60, "h1": end.hour + end.minute / 60 if end.date() == start.date() else 24,
+        "sort": (0 if all_day else 1, start),
+    }
+
+
+def get_events(now, ndays=7):
+    """Returns a list of ndays lists of events: [today, tomorrow, ...]. Past events today are dropped."""
+    days = [[] for _ in range(ndays)]
     url = os.getenv("ICS_URL")
     if not url:
-        return [], []
+        return days
     import icalendar
     import recurring_ical_events
 
     cal = icalendar.Calendar.from_ical(http_get(url))
     day0 = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    day1, day2 = day0 + dt.timedelta(days=1), day0 + dt.timedelta(days=2)
-
-    today, tomorrow = [], []
-    for e in recurring_ical_events.of(cal).between(day0, day2):
+    for e in recurring_ical_events.of(cal).between(day0, day0 + dt.timedelta(days=ndays)):
         start, all_day = _to_local(e["DTSTART"].dt)
         end = _to_local(e["DTEND"].dt)[0] if e.get("DTEND") else start
         if end <= now and not all_day:
-            continue  # already over
-        item = {
-            "title": str(e.get("SUMMARY", "(busy)")),
-            "time": "All day" if all_day else start.strftime("%-I:%M %p"),
-            "sort": (0 if all_day else 1, start),
-        }
-        if start < day1 or (all_day and start <= day0 < end):
-            today.append(item)
-        elif start < day2:
-            tomorrow.append(item)
-    today.sort(key=lambda x: x["sort"])
-    tomorrow.sort(key=lambda x: x["sort"])
-    return today, tomorrow
+            continue
+        item = _event(str(e.get("SUMMARY", "(busy)")), start, end, all_day)
+        for i in range(ndays):   # all-day events can span several days
+            d0 = day0 + dt.timedelta(days=i)
+            d1 = d0 + dt.timedelta(days=1)
+            if (start < d1 and end > d0) or (not all_day and d0 <= start < d1):
+                days[i].append(item)
+                if not all_day:
+                    break
+    for d in days:
+        d.sort(key=lambda x: x["sort"])
+    return days
+
+
+def get_macros(now, target):
+    """MACROS var is "YYYY-MM-DD,kcal,protein,carbs,fat" from the iPhone Shortcut
+    (MyFitnessPal -> Apple Health -> Shortcut). Stale days count as zero."""
+    raw = (os.getenv("MACROS") or "").strip()
+    if not raw:
+        return None
+    try:
+        day, *vals = raw.split(",")
+        k, p, c, f = (round(float(v)) for v in vals[:4])
+    except ValueError:
+        return None
+    if day != now.strftime("%Y-%m-%d"):
+        k = p = c = f = 0
+    return _macro_rows(k, p, c, f, target)
+
+
+def _macro_rows(k, p, c, f, target):
+    t = target or {"kcal": 2400, "protein": "125", "carbs": 320, "fat": 70}
+    tp = int(str(t["protein"]).split("-")[-1])
+    rows = [("Calories", k, t["kcal"], ""), ("Protein", p, tp, "g"), ("Carbs", c, t["carbs"], "g"), ("Fat", f, t.get("fat", 70), "g")]
+    return [{"name": n, "val": f"{v:,}", "goal": f"{g:,}", "unit": u, "pct": min(100, round(v * 100 / g)) if g else 0,
+             "left": f"{max(0, g - v):,}{u} left" if v < g else "done"} for n, v, g, u in rows]
+
+
+def get_steps(now):
+    """STEPS var is "YYYY-MM-DD,1234", pushed by an iPhone Shortcut.
+    A value from a previous day counts as 0 so the bar resets at midnight."""
+    raw = (os.getenv("STEPS") or "").strip()
+    goal = int(os.getenv("STEPS_GOAL") or 10000)
+    if not raw:
+        return None
+    try:
+        day, count = raw.split(",", 1)
+        count = int(float(count))
+    except ValueError:
+        return None
+    if day != now.strftime("%Y-%m-%d"):
+        count = 0
+    return {"count": f"{count:,}", "goal": f"{goal:,}", "pct": min(100, round(count * 100 / goal))}
+
+
+DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+
+
+def _session(plan, week, wk, dkey):
+    """One day's session as {title, detail, kind}."""
+    base = plan["weekly"][dkey]
+    s = {"title": base["title"], "detail": base.get("detail", ""), "kind": base["kind"]}
+    if base["kind"] == "run":
+        s["detail"] = wk.get(base["key"], "")
+    elif base["kind"] == "lift":
+        if dkey in wk:                       # per-week override (e.g. race week)
+            s = {"title": wk[dkey], "detail": "", "kind": "rest" if wk[dkey] == "Rest" else "lift"}
+        elif wk.get("tag") == "deload":
+            s["detail"] = plan["deload_lift"]
+    return s
+
+
+def get_training(now):
+    p = REPO / "training.yaml"
+    if not p.exists():
+        return None
+    plan = yaml.safe_load(p.read_text())
+    start, race = plan["start"], plan["race"]
+    today = now.date()
+    days_to_race = (race - today).days
+
+    if today < start:
+        return {"pre": True, "starts": start.strftime("%b %-d"), "days_to_race": days_to_race}
+    if today > race:
+        return {"done": True}
+
+    week = (today - start).days // 7 + 1
+    wk = plan["weeks"].get(week, {})
+    phase = next((n for a, b, n in plan["phases"] if a <= week <= b), "")
+    dkey = DAYS[today.weekday()]
+    tkey = DAYS[(today.weekday() + 1) % 7]
+    tweek = week + 1 if tkey == "mon" else week
+
+    s = _session(plan, week, wk, dkey)
+    overridden = dkey in wk
+    if s["kind"] == "lift" and not overridden and wk.get("tag") != "deload" \
+            and phase not in ("Rebuild", "Base"):
+        s["detail"] = plan["lift_notes"].get(phase, s["detail"])   # later phases: show the volume change
+    if s["kind"] == "run" and s["detail"].upper().startswith("RACE"):
+        s = {"title": s["detail"], "detail": "Go get it", "kind": "run"}
+    tomorrow = _session(plan, tweek, plan["weeks"].get(tweek, {}), tkey) if tweek <= 28 else None
+
+    if s["kind"] == "rest":
+        eat = plan["eat"]["rest"]
+    elif dkey == "sat":
+        eat = plan["eat"]["long_late" if today.month in (3, 4, 5) else "long_early"]
+    else:
+        eat = plan["eat"][s["kind"]]
+
+    tag = wk.get("tag", "")
+    return {
+        "week": week, "weeks": len(plan["weeks"]), "phase": phase,
+        "tag": tag.capitalize() if tag in ("deload", "taper") else ("Race week" if tag == "race" else ""),
+        "today": s, "tomorrow": tomorrow, "eat": eat,
+        "days_to_race": days_to_race, "race_label": plan.get("race_label", "Race"),
+    }
 
 
 def get_content():
@@ -167,8 +280,10 @@ def main():
     content = get_content()
     if args.mock:
         weather, today, tomorrow = mock_data()
+        steps = {"count": "6,482", "goal": "10,000", "pct": 65}
     else:
         weather, (today, tomorrow) = get_weather(), get_events(now)
+        steps = get_steps(now)
 
     ctx = {
         "now": now,
@@ -177,6 +292,8 @@ def main():
         "month": now.strftime("%B %Y"),
         "updated": now.strftime("%-I:%M %p"),
         "weather": weather,
+        "steps": steps,
+        "training": get_training(now),
         "today": today,
         "tomorrow": tomorrow,
         "focus": content.get("focus", ""),
