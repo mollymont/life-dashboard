@@ -282,7 +282,7 @@ def main():
         weather, today, tomorrow = mock_data()
         steps = {"count": "6,482", "goal": "10,000", "pct": 65}
     else:
-        weather, (today, tomorrow) = get_weather(), get_events(now)
+        weather, (today, tomorrow, *_) = get_weather(), get_events(now)
         steps = get_steps(now)
 
     ctx = {
