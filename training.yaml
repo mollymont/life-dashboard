@@ -1,15 +1,15 @@
 # 10K training plan. The dashboard works out today's session from the date.
 # Week 1 starts on `start` (a Monday). To slide the whole plan, change `start` and `race`.
 start: 2026-11-02
-race: 2027-05-15
+race: 2027-05-31          # Memorial Day, a Monday
 race_label: 10K
 
 phases:          # [first week, last week, name]
   - [1, 6, Rebuild]
   - [7, 14, Base]
   - [15, 22, Build]
-  - [23, 26, Sharpen]
-  - [27, 28, Taper]
+  - [23, 28, Sharpen]
+  - [29, 31, Taper]
 
 # What each weekday is. "run" days pull the detail from `weeks` below.
 weekly:
@@ -21,37 +21,49 @@ weekly:
   sat: {kind: run,  key: sat, title: "Long run"}
   sun: {kind: rest, title: "Rest", detail: "Walk, stretch, meal prep"}
 
-# Week-by-week runs. Tag deload/taper/race weeks with `tag`.
+# Week-by-week runs. Three runs a week; distances in miles at easy effort unless the
+# session says otherwise. Every run starts with a 5-minute brisk walk, and walk breaks
+# are always allowed — the miles count either way. If a week felt hard (lots of walking
+# to stay under your HR cap, legs not recovering), repeat it: slide `start` forward 7 days.
+#
+# Strides = 15-20 s fast but relaxed, full walk-back recovery.
+# Tempo    = comfortably hard; a few words, not sentences.
+# 10K effort = the pace you'd hope to race at.
+# WU/CD    = 1 mi easy warm-up / cool-down.
 weeks:
-  1:  {tue: "15 min", thu: "15 min", sat: "20 min"}
-  2:  {tue: "20 min", thu: "20 min", sat: "25 min"}
-  3:  {tue: "20 min", thu: "20 min + 4 strides", sat: "30 min"}
-  4:  {tag: deload, tue: "15 min", thu: "15 min + 4 strides", sat: "20 min"}
-  5:  {tue: "25 min", thu: "25 min + 4 strides", sat: "30 min"}
-  6:  {tue: "25 min", thu: "25 min + 6 strides", sat: "35 min"}
-  7:  {tue: "30 min", thu: "30 min + 6 strides", sat: "35 min"}
-  8:  {tag: deload, tue: "20 min", thu: "20 min + 4 strides", sat: "25 min"}
-  9:  {tue: "30 min", thu: "30 min + 6 strides", sat: "40 min"}
-  10: {tue: "30 min", thu: "30 min + 6 strides", sat: "45 min"}
-  11: {tue: "35 min", thu: "30 min incl. 6 x 20 s uphill", sat: "45 min"}
-  12: {tag: deload, tue: "25 min", thu: "25 min + 6 strides", sat: "35 min"}
-  13: {tue: "35 min", thu: "30 min incl. 6 x 20 s uphill", sat: "50 min"}
-  14: {tue: "35 min", thu: "WU + 3 x 4 min tempo + CD", sat: "50 min"}
-  15: {tue: "35 min", thu: "WU + 3 x 5 min tempo + CD", sat: "50 min"}
-  16: {tag: deload, tue: "30 min", thu: "30 min + 6 strides", sat: "40 min"}
-  17: {tue: "35 min", thu: "WU + 3 x 6 min tempo + CD", sat: "55 min"}
-  18: {tue: "40 min", thu: "WU + 6 x 2 min @ 10K effort + CD", sat: "60 min"}
-  19: {tue: "40 min", thu: "WU + 2 x 10 min tempo + CD", sat: "60 min"}
-  20: {tag: deload, tue: "30 min", thu: "30 min + 6 strides", sat: "45 min"}
-  21: {tue: "40 min", thu: "WU + 5 x 3 min @ 10K effort + CD", sat: "65 min"}
-  22: {tue: "40 min", thu: "WU + 20 min tempo + CD", sat: "70 min"}
-  23: {tue: "40 min", thu: "WU + 4 x 1 km @ goal pace + CD", sat: "70 min"}
-  24: {tag: deload, tue: "30 min", thu: "30 min + 6 strides", sat: "50 min"}
-  25: {tue: "40 min", thu: "WU + 3 x 2 km @ goal pace + CD", sat: "75 min"}
-  26: {tue: "40 min", thu: "5K time trial", sat: "70 min"}
-  27: {tag: taper, tue: "30 min", thu: "WU + 3 x 1 km @ goal pace + CD", sat: "50 min"}
-  28: {tag: race, tue: "25 min + 4 strides", thu: "20 min easy + 4 strides", sat: "RACE 10K",
-       mon: "Easy upper only, no legs", wed: "Rest", fri: "Rest"}   # per-week overrides for lift days
+  1:  {tue: "2 mi", thu: "2 mi", sat: "3 mi"}   # 7 mi
+  2:  {tue: "2.5 mi", thu: "2.5 mi + 4 strides", sat: "3.5 mi"}   # 8.5 mi
+  3:  {tue: "3 mi", thu: "3 mi + 6 strides", sat: "4 mi"}   # 10 mi
+  4:  {tag: deload, tue: "2 mi", thu: "2.5 mi + 4 strides", sat: "3 mi"}   # 7.5 mi
+  5:  {tue: "3 mi", thu: "3 mi + 6 strides", sat: "4.5 mi"}   # 10.5 mi
+  6:  {tue: "3.5 mi", thu: "3.5 mi incl. 6 x 20 s uphill", sat: "5 mi"}   # 12 mi
+  7:  {tue: "3.5 mi", thu: "WU + 3 x 0.5 mi tempo (2 min jog) + CD", sat: "5.5 mi"}   # 12.5 mi
+  8:  {tag: deload, tue: "2.5 mi", thu: "3 mi + 6 strides", sat: "4 mi"}   # 9.5 mi
+  9:  {tue: "4 mi", thu: "WU + 3 x 0.75 mi tempo (2 min jog) + CD", sat: "6 mi"}   # 14 mi
+  10: {tue: "4 mi", thu: "WU + 6 x 0.25 mi at 10K effort (2 min jog) + CD", sat: "6.2 mi - first 10K distance"}   # 14 mi
+  11: {tue: "4 mi", thu: "WU + 2 x 1 mi tempo (3 min jog) + CD", sat: "6.5 mi"}   # 15 mi
+  12: {tag: deload, tue: "3 mi", thu: "3 mi + 6 strides", sat: "5 mi"}   # 11 mi
+  13: {tue: "4.5 mi", thu: "WU + 4 x 0.5 mi at 10K effort (2 min jog) + CD", sat: "7 mi"}   # 16 mi
+  14: {tue: "4.5 mi", thu: "WU + 2 mi tempo + CD", sat: "7 mi"}   # 16.5 mi
+  15: {tue: "5 mi", thu: "WU + 5 x 0.5 mi at 10K effort (2 min jog) + CD", sat: "7.5 mi"}   # 17.5 mi
+  16: {tag: deload, tue: "3.5 mi", thu: "3.5 mi + 6 strides", sat: "5.5 mi"}   # 12.5 mi
+  17: {tue: "5 mi", thu: "WU + 2.5 mi tempo + CD", sat: "8 mi"}   # 18 mi
+  18: {tue: "5 mi", thu: "WU + 3 x 1 mi at 10K effort (3 min jog) + CD", sat: "8 mi"}   # 18.5 mi
+  19: {tue: "5 mi", thu: "WU + 3 mi tempo + CD", sat: "8.5 mi"}   # 19 mi
+  20: {tag: deload, tue: "3.5 mi", thu: "4 mi + 6 strides", sat: "6 mi"}   # 13.5 mi
+  21: {tue: "5 mi", thu: "WU + 4 x 1 mi at goal pace (2 min jog) + CD", sat: "9 mi"}   # 20.5 mi
+  22: {tue: "5 mi", thu: "WU + 6 x 0.5 mi faster than goal pace (2 min jog) + CD", sat: "9.5 mi"}   # 20.5 mi
+  23: {tue: "5 mi", thu: "WU + 2 x 2 mi at goal pace (3 min jog) + CD", sat: "8 mi, last 2 at goal pace"}   # 19.5 mi
+  24: {tag: deload, tue: "3.5 mi", thu: "4 mi + 6 strides", sat: "6 mi"}   # 13.5 mi
+  25: {tue: "5 mi", thu: "WU + 4 mi at goal pace + CD", sat: "10 mi - peak"}   # 21 mi
+  26: {tue: "4.5 mi", thu: "5K time trial", sat: "8 mi"}   # 17.5 mi
+  27: {tue: "5 mi", thu: "WU + 3 x 1 mi at goal pace (2 min jog) + CD", sat: "8 mi"}   # 18 mi
+  28: {tag: deload, tue: "3.5 mi", thu: "4 mi + 6 strides", sat: "6 mi"}   # 13.5 mi
+  29: {tag: taper, tue: "4 mi", thu: "WU + 3 x 1 mi at goal pace + CD", sat: "6 mi"}   # 15 mi
+  30: {tag: taper, tue: "3 mi + 4 strides", thu: "2 mi easy + 4 strides", sat: "2 mi easy shakeout",
+       mon: "Easy upper only, no legs", wed: "Rest", fri: "Rest"}   # 7 mi
+  31: {tag: race, mon: "RACE 10K"}   # race day is the Monday that opens this week
+
 
 # Lift-day note by phase (deload weeks override with `deload_lift`).
 lift_notes:

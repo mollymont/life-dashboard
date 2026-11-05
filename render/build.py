@@ -224,9 +224,11 @@ def get_training(now):
     if s["kind"] == "lift" and not overridden and wk.get("tag") != "deload" \
             and phase not in ("Rebuild", "Base"):
         s["detail"] = plan["lift_notes"].get(phase, s["detail"])   # later phases: show the volume change
-    if s["kind"] == "run" and s["detail"].upper().startswith("RACE"):
-        s = {"title": s["detail"], "detail": "Go get it", "kind": "run"}
-    tomorrow = _session(plan, tweek, plan["weeks"].get(tweek, {}), tkey) if tweek <= 28 else None
+    race_text = next((v for v in (s["detail"], s["title"]) if v.upper().startswith("RACE")), None)
+    if race_text:   # race day can fall on a run day (detail) or override a lift day (title)
+        s = {"title": race_text, "detail": "Go get it", "kind": "run"}
+    tomorrow = (_session(plan, tweek, plan["weeks"].get(tweek, {}), tkey)
+                if tweek <= len(plan["weeks"]) and today < race else None)
 
     if s["kind"] == "rest":
         eat = plan["eat"]["rest"]

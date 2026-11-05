@@ -58,7 +58,11 @@
                   padding: 5px 11px; }
     .train-body { padding: 9px 11px 10px; flex: 1; display: flex; flex-direction: column; }
     .sess { font-size: 31px; font-weight: 900; line-height: 1.02; letter-spacing: -0.8px; }
-    .sess-d { font-size: 18px; font-weight: 500; margin-top: 2px; }
+    /* quality sessions run long ("WU + 6 x 0.5 mi faster than goal pace ... + CD"),
+       so give the detail two lines before it clips */
+    .sess-d { font-size: 17px; font-weight: 500; margin-top: 2px; line-height: 1.18;
+              display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+              overflow: hidden; }
     .tmrw { font-size: 14px; font-weight: 500; margin-top: 3px; }
     .tmrw b { font-weight: 800; letter-spacing: 1px; text-transform: uppercase; font-size: 12px; }
 
@@ -145,8 +149,8 @@
       </div>
       <div class="train-body">
         <div class="sess ell">{{ t.today.title }}</div>
-        {% if t.today.detail %}<div class="sess-d ell">{{ t.today.detail }}</div>{% endif %}
-        {% if t.tomorrow %}<div class="tmrw ell"><b>Tomorrow</b> {{ t.tomorrow.title }}{% if t.tomorrow.kind == "run" %} · {{ t.tomorrow.detail }}{% endif %}</div>{% endif %}
+        {% if t.today.detail %}<div class="sess-d">{{ t.today.detail }}</div>{% endif %}
+        {% if t.tomorrow %}<div class="tmrw ell"><b>Tomorrow</b> {{ t.tomorrow.title }}{% if t.tomorrow.kind == "run" and t.tomorrow.detail %} · {{ t.tomorrow.detail }}{% endif %}</div>{% endif %}
       </div>
       {% endif %}
     </div>
