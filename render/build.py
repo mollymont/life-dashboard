@@ -14,6 +14,7 @@ import datetime as dt
 import json
 import os
 import sys
+import time
 import urllib.request
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -62,10 +63,26 @@ def wx_icon(code):
     return ICONS[g]
 
 
-def http_get(url: str) -> bytes:
+def http_get(url: str, tries: int = 3) -> bytes:
     req = urllib.request.Request(url, headers={"User-Agent": "life-dashboard/1.0"})
-    with urllib.request.urlopen(req, timeout=20) as r:
-        return r.read()
+    for i in range(tries):
+        try:
+            with urllib.request.urlopen(req, timeout=20) as r:
+                return r.read()
+        except OSError as e:          # URLError/TimeoutError are both OSError
+            if i == tries - 1:
+                raise
+            print(f"retry {i + 1}/{tries - 1} after {e}", file=sys.stderr)
+            time.sleep(2 ** i)
+
+
+def soft(fn, fallback, what: str):
+    """A flaky API shouldn't blank the whole screen - render what we do have."""
+    try:
+        return fn()
+    except Exception as e:
+        print(f"warning: {what} unavailable: {e}", file=sys.stderr)
+        return fallback
 
 
 # ---------- data sources ----------
@@ -339,7 +356,8 @@ def main():
         steps = {"count": "6,482", "goal": "10,000", "pct": 65}
         macros = _macro_rows(1840, 96, 210, 54, eat)
     else:
-        weather, (today, tomorrow, *_) = get_weather(), get_events(now)
+        weather = soft(get_weather, None, "weather")
+        today, tomorrow, *_ = soft(lambda: get_events(now), [[], []], "calendar")
         steps = get_steps(now)
         macros = get_macros(now, eat)
 
